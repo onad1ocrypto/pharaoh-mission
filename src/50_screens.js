@@ -49,21 +49,27 @@ function cardRect(i){
            y: CARD_Y[(i / 3) | 0], w: CARD_W, h: CARD_H };
 }
 
+/* ---------- kembali ke home (muat ulang papan skor) ---------- */
+function goTitle(){
+  G.screen = 'title';
+  NET.board(function(top, online){ G.titleTop = top; G.titleOnline = online; });
+}
+
 /* ---------- update layar menu ---------- */
 function updateMenus(){
   if (G.screen === 'title'){
     if (pressed.l){ openBoard(); clearPressed(); return; }
     if (pressed.enter || pressed.jump){ G.screen = 'intro'; SFX.blip(); clearPressed(); return; }
   } else if (G.screen === 'board'){
-    if (pressed.enter || pressed.esc || pressed.jump){ G.screen = 'title'; SFX.blip(); }
+    if (pressed.enter || pressed.esc || pressed.jump){ goTitle(); SFX.blip(); }
   } else if (G.screen === 'intro'){
     if (pressed.enter || pressed.jump){ startGame(); }
-    if (pressed.esc){ G.screen = 'title'; }
+    if (pressed.esc){ goTitle(); }
   } else if (G.screen === 'over'){
     if (pressed.enter || pressed.jump){ startGame(); }
-    if (pressed.esc){ G.screen = 'title'; }
+    if (pressed.esc){ goTitle(); }
   } else if (G.screen === 'complete'){
-    if (pressed.enter || pressed.jump || pressed.esc){ G.screen = 'title'; }
+    if (pressed.enter || pressed.jump || pressed.esc){ goTitle(); }
   }
   clearPressed();
 }
@@ -85,9 +91,9 @@ function canvasClick(x, y){
     }
     return;
   }
-  if (G.screen === 'board'){ G.screen = 'title'; return; }
+  if (G.screen === 'board'){ goTitle(); return; }
   if (G.screen === 'over'){ startGame(); return; }
-  if (G.screen === 'complete'){ G.screen = 'title'; return; }
+  if (G.screen === 'complete'){ goTitle(); return; }
   if (G.screen === 'play' && G.paused){ G.paused = false; }
 }
 
@@ -113,6 +119,35 @@ function renderTitle(){
   outlined('PHARAOH QUEST', VW/2, 64, 58, '#ffd976', '#a01820');
   outlined('Pharaoh on AVAX · The Liquidity Mission', VW/2, 108, 21, '#e84142', '#f6e7c8');
   shadowTxt('The Bear Market stole the royal liquidity — reclaim your PHAR & AVAX!', VW/2, 134, 15, '#fff6e0');
+
+  /* panel HALL OF FAME — selalu terlihat di home */
+  var px = VW - 312, py = 142, pw2 = 294, ph2 = 268;
+  panel(px, py, pw2, ph2);
+  outlined('🏆 HALL OF FAME', px + pw2/2, py + 24, 20, '#ffd976', '#5c130d');
+  if (G.titleTop === null){
+    shadowTxt('CONNECTING…', px + pw2/2, py + 130, 16, '#ffe9b0');
+  } else {
+    shadowTxt(G.titleOnline ? '★ GLOBAL TOP 5 ★' : 'LOCAL TOP 5 (offline)',
+              px + pw2/2, py + 48, 12.5, G.titleOnline ? '#ff6b5e' : '#ffe9b0');
+    var top5 = G.titleTop || [];
+    if (!top5.length){
+      shadowTxt('No scores yet —', px + pw2/2, py + 120, 15, '#fff6e0');
+      shadowTxt('be the first legend!', px + pw2/2, py + 142, 15, '#fff6e0');
+    }
+    for (var li = 0; li < Math.min(5, top5.length); li++){
+      var ly = py + 78 + li * 27, me5 = top5[li].u === NET.user;
+      if (me5){ CTX.fillStyle = 'rgba(245,197,66,.16)'; CTX.fillRect(px + 10, ly - 12, pw2 - 20, 24); }
+      var md = li === 0 ? '#ffd976' : li === 1 ? '#d8d8d8' : li === 2 ? '#d9a05b' : '#f6e7c8';
+      txt(String(li + 1) + '.', px + 20, ly, 15, md, 'left');
+      txt(top5[li].u, px + 46, ly, 15, me5 ? '#ffd976' : '#f6e7c8', 'left');
+      txt(String(top5[li].s).padStart(6, '0'), px + pw2 - 18, ly, 15, md, 'right');
+    }
+    var myRank = -1;
+    for (var ri = 0; ri < top5.length; ri++) if (top5[ri].u === NET.user) myRank = ri + 1;
+    shadowTxt('YOU: ' + (NET.user || '—') + (myRank > 0 ? '  ·  RANK #' + myRank : ''),
+              px + pw2/2, py + ph2 - 34, 13, '#ff9d97');
+    shadowTxt('L / tap button = full board', px + pw2/2, py + ph2 - 14, 11.5, 'rgba(246,231,200,.75)');
+  }
 
   if (G.t % 70 < 45) outlined('PRESS ENTER / TAP TO START', VW/2, 468, 24, '#ffffff', '#4a2c0a');
   /* pita footer gelap agar teks bawah kontras */
@@ -246,6 +281,7 @@ function renderWorld(){
     if (d.type === 'billboard' || d.type === 'logo' || d.type === 'sign') drawDeco(d);
   });
 
+  drawPyramid(L.flag * TILE, L.ground * TILE);
   drawFlag(L.flag * TILE, L.ground * TILE);
 
   L.coins.forEach(function(c){ if (!c.got) drawCoin(c.x, c.y, G.t, c.ph); });
@@ -343,11 +379,14 @@ function renderBoard(){
 function renderOver(){
   drawSky('ruins', 0, G.t);
   CTX.fillStyle = 'rgba(10,3,10,.66)'; CTX.fillRect(0, 0, VW, VH);
-  outlined('GAME OVER', VW/2, 200, 62, '#ff6b5e', '#3a0d08');
-  txt('FINAL SCORE  ' + G.score, VW/2, 268, 24, '#ffd976', 'center');
-  txt('BEST SCORE  ' + G.best, VW/2, 300, 17, '#f6e7c8', 'center');
-  if (G.t % 70 < 45) outlined('ENTER / TAP = TRY AGAIN', VW/2, 380, 22, '#ffffff', '#4a2c0a');
-  shadowTxt('ESC = menu', VW/2, 420, 14, '#ffe9b0');
+  outlined('GAME OVER', VW/2, 190, 62, '#ff6b5e', '#3a0d08');
+  txt('FINAL SCORE  ' + G.score, VW/2, 258, 24, '#ffd976', 'center');
+  txt('BEST SCORE  ' + G.best, VW/2, 290, 17, '#f6e7c8', 'center');
+  shadowTxt(NET.user ? '✔ score submitted to HALL OF FAME as ' + NET.user
+                     : 'score saved locally', VW/2, 322, 14, '#9fe8a0');
+  if (G.t % 70 < 45) outlined('ENTER / TAP = TRY AGAIN', VW/2, 372, 22, '#ffffff', '#4a2c0a');
+  var secs = Math.max(0, Math.ceil((300 - G.endT) / 60));
+  shadowTxt('back to HOME & leaderboard in ' + secs + 's  ·  ESC = home now', VW/2, 412, 14, '#ffe9b0');
 }
 
 function renderComplete(){
@@ -364,6 +403,10 @@ function renderComplete(){
   CTX.drawImage(im, VW/2 - w/2, 250, w, h);
   CTX.restore();
 
-  txt('FINAL SCORE  ' + G.score + '   ·   BEST  ' + G.best, VW/2, 480, 20, '#ffd976', 'center');
-  if (G.t % 70 < 45) outlined('ENTER / TAP = MENU', VW/2, 520, 20, '#ffffff', '#4a2c0a');
+  txt('FINAL SCORE  ' + G.score + '   ·   BEST  ' + G.best, VW/2, 470, 20, '#ffd976', 'center');
+  shadowTxt(NET.user ? '✔ score submitted to HALL OF FAME as ' + NET.user
+                     : 'score saved locally', VW/2, 498, 14, '#9fe8a0');
+  var secs = Math.max(0, Math.ceil((360 - G.endT) / 60));
+  if (G.t % 70 < 45) outlined('ENTER / TAP = HOME', VW/2, 528, 20, '#ffffff', '#4a2c0a');
+  shadowTxt('back to HOME & leaderboard in ' + secs + 's', VW/2, 550, 13, '#ffe9b0');
 }

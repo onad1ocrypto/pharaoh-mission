@@ -15,6 +15,10 @@ var ENEMY_ART  = __ENEMY_ART__;
 var artImage = null;
 if (TITLE_ART) { artImage = new Image(); artImage.src = TITLE_ART; }
 
+var PYRAMID_ART = __PYRAMID_ART__;
+var pyramidImage = null;
+if (PYRAMID_ART) { pyramidImage = new Image(); pyramidImage.src = PYRAMID_ART; }
+
 /* ---------- util ---------- */
 function rnd(i){ var x = Math.sin(i * 127.1 + 11.7) * 43758.5453; return x - Math.floor(x); }
 function clamp(v,a,b){ return v < a ? a : (v > b ? b : v); }

@@ -163,6 +163,22 @@ run("G.screen='title'; canvasClick(100, 80);");
 check('tombol HALL OF FAME membuka board', run('G.screen') === 'board');
 run("G.screen='title';");
 
+/* ---- piramida finish & alur pulang ke home ---- */
+check('aset piramida finish termuat (data URI png)', run('typeof pyramidImage !== "undefined" && !!pyramidImage && String(pyramidImage.src).indexOf("data:image/png") === 0'));
+run('loadLevel(0); G.done = true; G.doneT = 0; G.enterT = 0; G.P.x = G.L.flag*TILE + 90 - 34; G.P.y = G.L.ground*TILE - 64;');
+run('for (var i=0;i<30;i++) updatePlay();');
+check('pemain menyusut masuk piramida (enterT naik)', run('G.enterT') > 0);
+run('for (var i=0;i<120;i++) updatePlay();');
+check('setelah masuk piramida lanjut level berikutnya', run('G.levelIdx') === 1);
+run('G.screen = "over"; G.endT = 0; G.submitted = true;');
+run('for (var i=0;i<310;i++) __pq.step();');
+check('game over otomatis berhenti & pulang ke home', run('G.screen') === 'title');
+check('panel leaderboard home terisi setelah pulang', run('Array.isArray(G.titleTop)'));
+run('G.screen = "complete"; G.endT = 0;');
+run('for (var i=0;i<370;i++) __pq.step();');
+check('quest complete otomatis pulang ke home', run('G.screen') === 'title');
+run('G.screen = "play"; loadLevel(0);');
+
 /* ---- render semua layar (deteksi error runtime di kode gambar) ---- */
 try {
   run('var render = __pq.render;');

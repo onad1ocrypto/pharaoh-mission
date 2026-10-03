@@ -316,6 +316,31 @@ function drawGemItem(x, y, t){ /* kristal AVAX */
   CTX.restore();
 }
 
+/* ---------- piramida merah: gerbang finish ---------- */
+function drawPyramid(x, gy){
+  if (!pyramidImage || !pyramidImage.complete || !pyramidImage.width) return;
+  var h = 300, w = h * pyramidImage.width / pyramidImage.height;
+  var cx = x + 90; /* pintu sejajar pusat piramida */
+  CTX.save();
+  CTX.shadowColor = 'rgba(232,65,66,.55)'; CTX.shadowBlur = 26;
+  CTX.drawImage(pyramidImage, cx - w/2, gy - h + 10, w, h);
+  CTX.restore();
+  /* pintu gerbang bercahaya */
+  var pulse = 0.75 + Math.sin(G.t * 0.08) * 0.25;
+  var pw = 34, ph = 58;
+  var g = CTX.createLinearGradient(0, gy - ph, 0, gy);
+  g.addColorStop(0, 'rgba(255,224,140,' + (0.95 * pulse) + ')');
+  g.addColorStop(1, 'rgba(255,110,40,' + (0.85 * pulse) + ')');
+  CTX.fillStyle = g;
+  CTX.beginPath();
+  CTX.moveTo(cx - pw/2, gy);
+  CTX.lineTo(cx - pw/2, gy - ph + 12);
+  CTX.quadraticCurveTo(cx, gy - ph - 8, cx + pw/2, gy - ph + 12);
+  CTX.lineTo(cx + pw/2, gy);
+  CTX.closePath(); CTX.fill();
+  CTX.strokeStyle = '#ffd976'; CTX.lineWidth = 2; CTX.stroke();
+}
+
 function drawFlag(x, gy){
   var top = gy - 5 * TILE;
   CTX.fillStyle = '#d8b271'; CTX.fillRect(x - 3, top, 6, 5 * TILE);
@@ -452,9 +477,13 @@ function drawPlayer(){
   var P = G.P;
   if (P.invincibleT > 0 && (G.t % 8 < 4) && !G.dying && P.hurtT <= 0) return;
 
+  /* mengecil saat masuk piramida finish */
+  var ent = (G.enterT > 0) ? Math.max(0, 1 - G.enterT / 45) : 1;
+  if (ent <= 0.02) return;
+
   /* bayangan */
-  CTX.fillStyle = 'rgba(0,0,0,.25)';
-  CTX.beginPath(); CTX.ellipse(P.x + P.w / 2, P.groundY, 20, 6, 0, 0, 7); CTX.fill();
+  CTX.fillStyle = 'rgba(0,0,0,' + (0.25 * ent) + ')';
+  CTX.beginPath(); CTX.ellipse(P.x + P.w / 2, P.groundY, 20 * ent, 6 * ent, 0, 0, 7); CTX.fill();
 
   var idx;
   if (G.dying || P.hurtT > 0)            idx = 5; /* terkena */
@@ -478,7 +507,7 @@ function drawPlayer(){
   var img = charImgs[idx];
   CTX.save();
   CTX.translate(P.x + P.w / 2, P.y + P.h);
-  CTX.scale(P.face < 0 ? -1 : 1, 1);
+  CTX.scale((P.face < 0 ? -1 : 1) * ent, ent);
   if (!P.grounded) CTX.rotate(P.face * -0.06);
   var h = P.h + 2, w = h * img.width / img.height;
   w = Math.min(w, 96);

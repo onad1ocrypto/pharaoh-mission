@@ -7,11 +7,22 @@
   function step(){
     if (G.screen === 'play') updatePlay();
     else { G.t++; updateMenus(); }
-    if ((G.screen === 'over' || G.screen === 'complete') && !G.submitted){
-      G.submitted = true;
-      NET.submit(G.score);
+    if (G.screen === 'over' || G.screen === 'complete'){
+      if (!G.submitted){
+        G.submitted = true;
+        NET.submit(G.score);
+      }
+      /* game berhenti, lalu otomatis pulang ke home untuk lihat skor */
+      G.endT++;
+      if ((G.screen === 'over' && G.endT > 300) || (G.screen === 'complete' && G.endT > 360)){
+        goTitle();
+        SFX.blip();
+      }
     }
   }
+
+  /* muat papan skor untuk panel home saat pertama kali */
+  NET.board(function(top, online){ G.titleTop = top; G.titleOnline = online; });
 
   function render(){
     if (G.screen === 'title')        renderTitle();

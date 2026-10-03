@@ -8,7 +8,8 @@ var G = {
   score:0, coins:0, lives:3, timeLeft:0,
   best:0, sel:0, charIdx:0,
   paused:false, dying:false, dieT:0,
-  done:false, doneT:0, timeBonus:0,
+  done:false, doneT:0, timeBonus:0, enterT:0, endT:0,
+  titleTop:null, titleOnline:false,
   fx:[], bumps:{}
 };
 try { G.best = parseInt(localStorage.getItem('pharaohquest_best') || '0', 10) || 0; } catch(e){}
@@ -28,7 +29,7 @@ function loadLevel(i){
   G.P = newPlayer();
   G.camX = 0; G.timeLeft = G.L.time;
   G.fx = []; G.bumps = {}; G.shots = [];
-  G.done = false; G.doneT = 0; G.timeBonus = 0;
+  G.done = false; G.doneT = 0; G.timeBonus = 0; G.enterT = 0;
   G.dying = false; G.dieT = 0; G.paused = false;
   G.bird = { on:false }; G.birdT = 420; G.bossHint = 0;
 }
@@ -71,7 +72,7 @@ function loseLife(){
   G.lives--;
   if (G.lives <= 0){
     saveBest();
-    G.screen = 'over';
+    G.screen = 'over'; G.endT = 0;
     SFX.sad();
   } else {
     respawn();
@@ -117,16 +118,23 @@ function takeHit(srcX){
 function updatePlayer(){
   var P = G.P, L = G.L, i, m;
 
-  if (G.done){ /* jalan kemenangan ke kanan */
+  if (G.done){ /* jalan kemenangan ke kanan, lalu masuk piramida */
     G.doneT++;
-    P.vx = 1.6; P.vy += GRAV;
-    P.x += P.vx; P.y = Math.min(P.y + P.vy, L.ground*TILE - P.h);
+    var doorX = L.flag * TILE + 90;
+    if (P.x + P.w/2 < doorX - 4){
+      P.vx = 1.6; P.x += P.vx;
+    } else {
+      P.vx = 0;
+      G.enterT++;
+      if (G.enterT === 1) SFX.power();
+    }
+    P.vy += GRAV; P.y = Math.min(P.y + P.vy, L.ground*TILE - P.h);
     if (P.y >= L.ground*TILE - P.h) P.vy = 0;
     P.face = 1;
-    if (G.doneT > 150){
+    if (G.doneT > 150 || G.enterT > 60){
       if (G.levelIdx + 1 >= LEVELS.length){
         saveBest();
-        G.screen = 'complete';
+        G.screen = 'complete'; G.endT = 0;
         SFX.fanfare();
       } else {
         loadLevel(G.levelIdx + 1);
@@ -255,7 +263,7 @@ function updatePlayer(){
   /* jatuh ke jurang */
   if (P.y > ROWS*TILE + 40){
     G.lives--;
-    if (G.lives <= 0){ saveBest(); G.screen = 'over'; SFX.sad(); }
+    if (G.lives <= 0){ saveBest(); G.screen = 'over'; G.endT = 0; SFX.sad(); }
     else { SFX.die(); respawn(); }
     return;
   }
@@ -476,7 +484,7 @@ function updatePlay(){
     if (G.timeLeft <= 0){
       G.timeLeft = 0;
       G.lives--;
-      if (G.lives <= 0){ saveBest(); G.screen = 'over'; SFX.sad(); }
+      if (G.lives <= 0){ saveBest(); G.screen = 'over'; G.endT = 0; SFX.sad(); }
       else startDie();
     }
   }

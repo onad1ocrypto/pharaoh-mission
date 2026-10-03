@@ -13,12 +13,17 @@ chars = json.load(open("/home/user/assets/chars.json"))
 title_art = open("/home/user/assets/title_art.txt").read().strip()
 print("title art KB:", len(title_art) / 1024)
 
+# piramida merah (gerbang finish tiap level)
+pyramid_art = open("/home/user/assets/pyramid_art.txt").read().strip()
+print("pyramid art KB:", len(pyramid_art) / 1024)
+
 js_parts = ["10_core.js", "20_levels.js", "30_sprites.js", "40_game.js", "50_screens.js", "60_main.js"]
 js = "\n".join(open(f"{SRC}/{p}").read() for p in js_parts)
 
-assert "__CHARACTERS__" in js and "__TITLE_ART__" in js
+assert "__CHARACTERS__" in js and "__TITLE_ART__" in js and "__PYRAMID_ART__" in js
 js = js.replace("__CHARACTERS__", json.dumps(chars))
 js = js.replace("__TITLE_ART__", json.dumps(title_art))
+js = js.replace("__PYRAMID_ART__", json.dumps(pyramid_art))
 js = js.replace("__ENEMY_ART__", open("/home/user/assets/enemies.json").read())
 
 head = open(f"{SRC}/head.html").read()
