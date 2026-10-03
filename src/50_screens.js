@@ -44,6 +44,7 @@ function panel(x, y, w, h, alpha){
 var CARD_W = 170, CARD_H = 170, CARD_X0 = 195, CARD_Y = [95, 285], CARD_GAP = 30;
 var START_BTN = { x: VW/2 - 110, y: 472, w: 220, h: 48 };
 var LEADER_BTN = { x: VW - 312, y: 418, w: 294, h: 40 };
+var SASAM_LINK = { x: VW - 148, y: VH - 30, w: 140, h: 26, url: 'https://x.com/onadeonft' };
 function cardRect(i){
   return { x: CARD_X0 + (i % 3) * (CARD_W + CARD_GAP),
            y: CARD_Y[(i / 3) | 0], w: CARD_W, h: CARD_H };
@@ -77,6 +78,11 @@ function updateMenus(){
 function canvasClick(x, y){
   var i, r;
   if (G.screen === 'title'){
+    if (x >= SASAM_LINK.x && x <= SASAM_LINK.x + SASAM_LINK.w &&
+        y >= SASAM_LINK.y && y <= SASAM_LINK.y + SASAM_LINK.h){
+      try { window.open(SASAM_LINK.url, '_blank'); } catch(e){}
+      return;
+    }
     if (x >= LEADER_BTN.x && x <= LEADER_BTN.x + LEADER_BTN.w &&
         y >= LEADER_BTN.y && y <= LEADER_BTN.y + LEADER_BTN.h){ openBoard(); return; }
     G.screen = 'intro'; SFX.blip(); return;
@@ -159,8 +165,18 @@ function renderTitle(){
   shadowTxt(IS_TOUCH ? 'On-screen: ◀ ▶ move · ▲ jump · ⚡ shoot · 🛡 block'
                : '← → / A D move · SPACE jump · J shoot · K block · L = leaderboard', VW/2, 514, 14, '#ffe9b0');
   shadowTxt('BEST SCORE: ' + G.best, VW/2, 533, 14, '#ffd976');
-  shadowTxt('Made to celebrate the 1-Year Anniversary of Pharaoh on AVAX', VW/2, 548, 12.5, '#ffd976');
-  shadowTxt('BY : SASAM', VW/2, 560 - 6, 12.5, '#ff6b5e');
+  shadowTxt('Made to celebrate the 1-Year Anniversary of Pharaoh on AVAX', VW/2, 550, 12.5, '#ffd976');
+
+  /* kredit pojok kanan-bawah — klik membuka x.com/onadeonft */
+  CTX.save();
+  CTX.font = 'bold 13px "Trebuchet MS",Verdana,sans-serif';
+  CTX.textAlign = 'right'; CTX.textBaseline = 'middle';
+  CTX.fillStyle = '#ff6b5e';
+  CTX.fillText('BY : SASAM ↗', VW - 14, VH - 17);
+  var wl = CTX.measureText('BY : SASAM ↗').width;
+  CTX.strokeStyle = 'rgba(255,107,94,.85)'; CTX.lineWidth = 1;
+  CTX.beginPath(); CTX.moveTo(VW - 14 - wl, VH - 10); CTX.lineTo(VW - 14, VH - 10); CTX.stroke();
+  CTX.restore();
 }
 
 var SCENES = [

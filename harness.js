@@ -161,6 +161,8 @@ check('flag terbuka setelah boss kalah', run('G.done') === true);
 /* ---- tombol leaderboard di title ---- */
 run("G.screen='title'; canvasClick(LEADER_BTN.x + 10, LEADER_BTN.y + 10);");
 check('tombol HALL OF FAME membuka board', run('G.screen') === 'board');
+run("G.screen='title'; canvasClick(VW - 40, VH - 14);");
+check('klik kredit BY : SASAM membuka link X (bukan mulai game)', run('G.screen') === 'title' && String(run('SASAM_LINK.url')).indexOf('x.com/onadeonft') >= 0);
 run("G.screen='title';");
 
 /* ---- piramida finish & alur pulang ke home ---- */
