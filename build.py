@@ -33,6 +33,7 @@ html = head + js + "\n</script>\n</body>\n</html>\n"
 import os
 os.makedirs("/home/user/build", exist_ok=True)
 open(OUT_HTML, "w").write(html)
+open("/home/user/index.html", "w").write(html)  # agar root https://…/ langsung membuka game
 open(OUT_JS, "w").write(js)
 print("html KB:", len(html) / 1024)
-print("saved", OUT_HTML)
+print("saved", OUT_HTML, "+ index.html")
