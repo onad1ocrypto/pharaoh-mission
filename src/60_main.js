@@ -14,7 +14,7 @@
       }
       /* game berhenti, lalu otomatis pulang ke home untuk lihat skor */
       G.endT++;
-      if ((G.screen === 'over' && G.endT > 300) || (G.screen === 'complete' && G.endT > 360)){
+      if ((G.screen === 'over' && G.endT > 180) || (G.screen === 'complete' && G.endT > 300)){
         goTitle();
         SFX.blip();
       }

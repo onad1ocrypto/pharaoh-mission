@@ -43,7 +43,7 @@ function panel(x, y, w, h, alpha){
 /* ---------- layout kartu pilih karakter ---------- */
 var CARD_W = 170, CARD_H = 170, CARD_X0 = 195, CARD_Y = [95, 285], CARD_GAP = 30;
 var START_BTN = { x: VW/2 - 110, y: 472, w: 220, h: 48 };
-var LEADER_BTN = { x: 18, y: 58, w: 208, h: 44 };
+var LEADER_BTN = { x: VW - 312, y: 418, w: 294, h: 40 };
 function cardRect(i){
   return { x: CARD_X0 + (i % 3) * (CARD_W + CARD_GAP),
            y: CARD_Y[(i / 3) | 0], w: CARD_W, h: CARD_H };
@@ -66,8 +66,7 @@ function updateMenus(){
     if (pressed.enter || pressed.jump){ startGame(); }
     if (pressed.esc){ goTitle(); }
   } else if (G.screen === 'over'){
-    if (pressed.enter || pressed.jump){ startGame(); }
-    if (pressed.esc){ goTitle(); }
+    if (pressed.enter || pressed.jump || pressed.esc){ goTitle(); }
   } else if (G.screen === 'complete'){
     if (pressed.enter || pressed.jump || pressed.esc){ goTitle(); }
   }
@@ -92,7 +91,7 @@ function canvasClick(x, y){
     return;
   }
   if (G.screen === 'board'){ goTitle(); return; }
-  if (G.screen === 'over'){ startGame(); return; }
+  if (G.screen === 'over'){ goTitle(); return; }
   if (G.screen === 'complete'){ goTitle(); return; }
   if (G.screen === 'play' && G.paused){ G.paused = false; }
 }
@@ -101,20 +100,21 @@ function canvasClick(x, y){
 function renderTitle(){
   drawSky('desert', G.t * 0.6, G.t);
 
+  if (artImage && artImage.complete && artImage.width){
+    var h = 250, w = h * artImage.width / artImage.height;
+    var bob = Math.sin(G.t * 0.04) * 6;
+    CTX.save();
+    CTX.shadowColor = 'rgba(255,120,60,.55)'; CTX.shadowBlur = 34;
+    CTX.drawImage(artImage, 400 - w/2, 150 + bob, w, h);
+    CTX.restore();
+  }
+
+  /* tombol papan penuh — di bawah panel HALL OF FAME */
   CTX.fillStyle = 'rgba(224,72,62,.95)';
   rrect(LEADER_BTN.x, LEADER_BTN.y, LEADER_BTN.w, LEADER_BTN.h, 12); CTX.fill();
   CTX.strokeStyle = '#ffd976'; CTX.lineWidth = 3;
   rrect(LEADER_BTN.x, LEADER_BTN.y, LEADER_BTN.w, LEADER_BTN.h, 12); CTX.stroke();
-  outlined('🏆 HALL OF FAME', LEADER_BTN.x + LEADER_BTN.w/2, LEADER_BTN.y + 23, 19, '#ffffff', '#5c130d');
-
-  if (artImage && artImage.complete && artImage.width){
-    var h = 290, w = h * artImage.width / artImage.height;
-    var bob = Math.sin(G.t * 0.04) * 6;
-    CTX.save();
-    CTX.shadowColor = 'rgba(255,120,60,.55)'; CTX.shadowBlur = 34;
-    CTX.drawImage(artImage, VW/2 - w/2, 150 + bob - h/2 + h/2, w, h);
-    CTX.restore();
-  }
+  outlined('🏆 HALL OF FAME — FULL BOARD', LEADER_BTN.x + LEADER_BTN.w/2, LEADER_BTN.y + 21, 16, '#ffffff', '#5c130d');
 
   outlined('PHARAOH QUEST', VW/2, 64, 58, '#ffd976', '#a01820');
   outlined('Pharaoh on AVAX · The Liquidity Mission', VW/2, 108, 21, '#e84142', '#f6e7c8');
@@ -384,9 +384,9 @@ function renderOver(){
   txt('BEST SCORE  ' + G.best, VW/2, 290, 17, '#f6e7c8', 'center');
   shadowTxt(NET.user ? '✔ score submitted to HALL OF FAME as ' + NET.user
                      : 'score saved locally', VW/2, 322, 14, '#9fe8a0');
-  if (G.t % 70 < 45) outlined('ENTER / TAP = TRY AGAIN', VW/2, 372, 22, '#ffffff', '#4a2c0a');
-  var secs = Math.max(0, Math.ceil((300 - G.endT) / 60));
-  shadowTxt('back to HOME & leaderboard in ' + secs + 's  ·  ESC = home now', VW/2, 412, 14, '#ffe9b0');
+  if (G.t % 70 < 45) outlined('ENTER / TAP = HOME & HALL OF FAME', VW/2, 372, 22, '#ffffff', '#4a2c0a');
+  var secs = Math.max(0, Math.ceil((180 - G.endT) / 60));
+  shadowTxt('back to HOME in ' + secs + 's — play again from there', VW/2, 412, 14, '#ffe9b0');
 }
 
 function renderComplete(){
@@ -406,7 +406,7 @@ function renderComplete(){
   txt('FINAL SCORE  ' + G.score + '   ·   BEST  ' + G.best, VW/2, 470, 20, '#ffd976', 'center');
   shadowTxt(NET.user ? '✔ score submitted to HALL OF FAME as ' + NET.user
                      : 'score saved locally', VW/2, 498, 14, '#9fe8a0');
-  var secs = Math.max(0, Math.ceil((360 - G.endT) / 60));
+  var secs = Math.max(0, Math.ceil((300 - G.endT) / 60));
   if (G.t % 70 < 45) outlined('ENTER / TAP = HOME', VW/2, 528, 20, '#ffffff', '#4a2c0a');
   shadowTxt('back to HOME & leaderboard in ' + secs + 's', VW/2, 550, 13, '#ffe9b0');
 }

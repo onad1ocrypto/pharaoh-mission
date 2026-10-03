@@ -319,24 +319,24 @@ function drawGemItem(x, y, t){ /* kristal AVAX */
 /* ---------- piramida merah: gerbang finish ---------- */
 function drawPyramid(x, gy){
   if (!pyramidImage || !pyramidImage.complete || !pyramidImage.width) return;
-  var h = 300, w = h * pyramidImage.width / pyramidImage.height;
+  var h = 290, w = h * pyramidImage.width / pyramidImage.height;
   var cx = x + 90; /* pintu sejajar pusat piramida */
   CTX.save();
   CTX.shadowColor = 'rgba(232,65,66,.55)'; CTX.shadowBlur = 26;
-  CTX.drawImage(pyramidImage, cx - w/2, gy - h + 10, w, h);
+  CTX.drawImage(pyramidImage, cx - w/2, gy - h + 6, w, h); /* dasar tertanam 6px di tanah */
   CTX.restore();
   /* pintu gerbang bercahaya */
   var pulse = 0.75 + Math.sin(G.t * 0.08) * 0.25;
-  var pw = 34, ph = 58;
+  var pw = 34, ph = 54;
   var g = CTX.createLinearGradient(0, gy - ph, 0, gy);
   g.addColorStop(0, 'rgba(255,224,140,' + (0.95 * pulse) + ')');
   g.addColorStop(1, 'rgba(255,110,40,' + (0.85 * pulse) + ')');
   CTX.fillStyle = g;
   CTX.beginPath();
-  CTX.moveTo(cx - pw/2, gy);
+  CTX.moveTo(cx - pw/2, gy + 6);
   CTX.lineTo(cx - pw/2, gy - ph + 12);
   CTX.quadraticCurveTo(cx, gy - ph - 8, cx + pw/2, gy - ph + 12);
-  CTX.lineTo(cx + pw/2, gy);
+  CTX.lineTo(cx + pw/2, gy + 6);
   CTX.closePath(); CTX.fill();
   CTX.strokeStyle = '#ffd976'; CTX.lineWidth = 2; CTX.stroke();
 }

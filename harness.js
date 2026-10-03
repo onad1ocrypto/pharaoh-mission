@@ -118,7 +118,7 @@ check('screen game over', run('G.screen') === 'over');
 
 /* ---- layar menu ---- */
 run("pressed.enter = true; updateMenus();");
-check('over + enter -> mulai lagi (play)', run('G.screen') === 'play');
+check('over + enter -> pulang ke home (flow baru)', run('G.screen') === 'title');
 
 /* ---- beruang market tak bisa diinjak ---- */
 run('loadLevel(0); var eb = G.L.enemies.filter(function(e){return e.type==="b";})[0]; eb.vx = 0; eb.x = 96*TILE; G.lives = 3; G.P.invincibleT = 0; G.P.powerT = 0; G.P.x = eb.x + 6; G.P.y = eb.y - 120; G.P.grounded = false; G.P.vy = 4; for (var i=0;i<60;i++) updatePlay();');
@@ -159,7 +159,7 @@ run('G.P.x = (G.L.flag-2)*TILE; G.P.y = G.L.ground*TILE-64; G.P.invincibleT = 99
 check('flag terbuka setelah boss kalah', run('G.done') === true);
 
 /* ---- tombol leaderboard di title ---- */
-run("G.screen='title'; canvasClick(100, 80);");
+run("G.screen='title'; canvasClick(LEADER_BTN.x + 10, LEADER_BTN.y + 10);");
 check('tombol HALL OF FAME membuka board', run('G.screen') === 'board');
 run("G.screen='title';");
 
@@ -174,6 +174,8 @@ run('G.screen = "over"; G.endT = 0; G.submitted = true;');
 run('for (var i=0;i<310;i++) __pq.step();');
 check('game over otomatis berhenti & pulang ke home', run('G.screen') === 'title');
 check('panel leaderboard home terisi setelah pulang', run('Array.isArray(G.titleTop)'));
+run('G.screen = "over"; G.endT = 0; pressed.enter = true; updateMenus();');
+check('ENTER/tap di game over langsung pulang (bukan restart)', run('G.screen') === 'title');
 run('G.screen = "complete"; G.endT = 0;');
 run('for (var i=0;i<370;i++) __pq.step();');
 check('quest complete otomatis pulang ke home', run('G.screen') === 'title');
