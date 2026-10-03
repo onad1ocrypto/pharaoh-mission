@@ -37,7 +37,7 @@ the **BEAR MARKET cannot be stomped** — shoot it or block it.
 - AI-generated 3D-cartoon hero with 6 scene poses (idle, run, attack, defend, super, hurt)
 - AI-generated enemies: scarab, mummy and the Bear Market
 - Brand murals on the road walls: PHARAOH EXCHANGE billboards, pharaoh.gg signs, AVAX icons
-- A bird occasionally flies by carrying a **PHARAOH.GG** banner
+- A bird occasionally flies by carrying a **PHAR.GG** banner
 - Synthesized Middle-Eastern-flavored chiptune soundtrack + SFX (WebAudio, no audio files)
 - Embedded *Cinzel Decorative* title font; score / best-score persistence
 - Fully English UI
