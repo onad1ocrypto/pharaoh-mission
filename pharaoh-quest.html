@@ -347,14 +347,14 @@ var LEVELS = [
   /* ------------------------------ LEVEL 2 ------------------------------ */
   {
     name:'TEMPLE OF x(3,3)', theme:'ruins', width:165, ground:11, time:330,
-    pits:[[22,24],[45,48],[70,72],[96,99],[120,123],[145,147]],
+    pits:[[22,24],[45,47],[70,72],[96,98],[120,122],[145,147]],
     plat:[[8,8,3],[15,6,2],[28,8,4],[36,7,3],[52,8,3],[58,6,4],[66,8,2],[76,9,3],
           [84,7,3],[92,8,2],[102,7,3],[110,9,4],[118,6,3],[128,8,3],[136,7,4],[150,8,3]],
     qb:[[9,7],[16,5],[29,7],[53,7],[59,5],[77,8],[85,6],[103,6],[111,8],[129,7],[137,6]],
     coins:[[10,6,3],[30,6,4],[54,6,3],[67,6,2],[86,5,3],[104,5,3],[119,7,3],[130,6,4],[151,6,3]],
-    enemies:[['s',12],['m',32],['s',40],['s',56],['m',66],['s',80],['m',94],['b',108],['s',112],
-             ['s',126],['m',140],['s',152]],
-    spikes:[[26,10,2],[74,10,3],[114,10,2],[133,10,2]],
+    enemies:[['s',12],['m',32],['s',40],['m',66],['s',80],['m',94],['b',108],['s',112],
+             ['m',140],['s',152]],
+    spikes:[[28,10,2],[76,10,2],[114,10,2],[133,10,2]],
     mplat:[{x:45,y:7,w:3,axis:'v',range:120,speed:0.70},
            {x:96,y:6,w:3,axis:'h',range:170,speed:0.80},
            {x:120,y:6,w:3,axis:'h',range:130,speed:0.95}],
@@ -366,14 +366,14 @@ var LEVELS = [
   /* ------------------------------ LEVEL 3 ------------------------------ */
   {
     name:'PYRAMID VAULT', theme:'tomb', width:180, ground:11, time:340,
-    pits:[[18,21],[38,41],[58,62],[80,84],[104,108],[128,132],[152,156]],
+    pits:[[18,21],[38,41],[58,61],[80,83],[104,107],[128,131],[152,155]],
     plat:[[10,8,3],[24,7,3],[30,9,2],[44,8,4],[52,6,3],[66,8,3],[72,6,2],[88,9,3],
           [94,7,3],[110,8,4],[118,6,3],[122,9,2],[136,8,3],[142,6,4],[158,8,3],[166,7,3]],
     qb:[[11,7],[25,6],[45,7],[53,5],[67,7],[89,8],[95,6],[111,7],[119,5],[137,7],[143,5],[159,7]],
     coins:[[26,5,3],[46,6,4],[54,4,3],[68,6,3],[90,7,3],[96,5,3],[112,6,4],[120,4,3],
            [138,6,3],[144,4,4],[160,6,3]],
     enemies:[['s',14],['m',28],['s',34],['b',50],['m',64],['s',74],['b',92],['s',100],
-             ['m',116],['s',125],['b',140],['m',150],['s',162]],
+             ['m',116],['s',125],['b',140],['m',150],['s',162],['B',168]],
     spikes:[[44,10,2],[70,10,2],[112,10,3],[135,10,2],[160,10,2]],
     mplat:[{x:18,y:7,w:3,axis:'h',range:150,speed:0.80},
            {x:38,y:6,w:3,axis:'v',range:130,speed:0.75},
@@ -428,11 +428,13 @@ function buildLevel(idx){
       return { type:t, x:px, y:6*TILE, w:38, h:26, vx:(n % 2 ? -1.15 : 1.15), vy:0,
                baseY:6*TILE, ph:n, anim:0, dead:false, deadT:0 };
     }
-    var h = t === 'm' ? 50 : (t === 'b' ? 40 : 30);
+    var h = t === 'm' ? 50 : (t === 'b' ? 40 : (t === 'B' ? 92 : 30));
     py = (L.ground) * TILE - h;
-    return { type:t, x:px, y:py, w: t === 'm' ? 32 : (t === 'b' ? 46 : 34), h:h,
-             vx:(n % 2 ? -0.85 : 0.85) * (t === 'm' ? 0.75 : (t === 'b' ? 0.62 : 1.15)), vy:0,
-             baseY:py, ph:n * 1.3, anim:0, dead:false, deadT:0, ground:true };
+    return { type:t, x:px, y:py,
+             w: t === 'm' ? 32 : (t === 'b' ? 46 : (t === 'B' ? 70 : 34)), h:h,
+             vx: t === 'B' ? 0.5 : (n % 2 ? -0.85 : 0.85) * (t === 'm' ? 0.75 : (t === 'b' ? 0.62 : 1.15)),
+             vy:0, baseY:py, ph:n * 1.3, anim:0, dead:false, deadT:0, ground:true,
+             hp: t === 'B' ? 6 : 1, chargeT:160, charge:0, flash:0 };
   });
 
   /* platform bergerak */
@@ -854,7 +856,7 @@ function drawBird(){
 }
 
 function drawEnemy(e){
-  var img = enemyImgs[e.type];
+  var img = enemyImgs[e.type === 'B' ? 'b' : e.type];
   if (!img || !img.width) return;
   CTX.save();
   var cx = e.x + e.w / 2;
@@ -866,9 +868,31 @@ function drawEnemy(e){
   }
   CTX.translate(cx, e.y + e.h);
   CTX.scale(e.vx < 0 ? -1 : 1, 1);
-  var h = e.h * (e.type === 's' ? 1.3 : 1.15);
+  var h = e.type === 's' ? e.h * 1.3 : (e.type === 'B' ? e.h * 1.06 : e.h * 1.15);
   var w = h * img.width / img.height;
+  if (e.type === 'B' && e.charge > 0){
+    CTX.shadowColor = 'rgba(232,65,66,.9)'; CTX.shadowBlur = 26;
+  }
   CTX.drawImage(img, -w / 2, -h, w, h);
+  CTX.shadowBlur = 0;
+  if (e.type === 'B'){
+    /* mahkota nemes firaun di kepala bear */
+    var hx = w * 0.14, hy = -h + 4, cw = 46, chh = 26;
+    CTX.fillStyle = '#f5c542';
+    CTX.beginPath();
+    CTX.moveTo(hx - cw/2, hy + chh);
+    CTX.lineTo(hx - cw*0.30, hy);
+    CTX.lineTo(hx + cw*0.30, hy);
+    CTX.lineTo(hx + cw/2, hy + chh);
+    CTX.closePath(); CTX.fill();
+    CTX.fillStyle = '#e84142';
+    for (var st2 = -2; st2 <= 2; st2++) CTX.fillRect(hx + st2*8 - 2, hy + 3, 4, chh - 6);
+    if (e.flash > 0){
+      CTX.globalAlpha = 0.55;
+      CTX.fillStyle = '#ffffff';
+      CTX.beginPath(); CTX.ellipse(0, -h/2, w*0.55, h*0.55, 0, 0, 7); CTX.fill();
+    }
+  }
   CTX.restore();
 }
 
@@ -979,7 +1003,7 @@ function loadLevel(i){
   G.fx = []; G.bumps = {}; G.shots = [];
   G.done = false; G.doneT = 0; G.timeBonus = 0;
   G.dying = false; G.dieT = 0; G.paused = false;
-  G.bird = { on:false }; G.birdT = 420;
+  G.bird = { on:false }; G.birdT = 420; G.bossHint = 0;
 }
 
 function startGame(){
@@ -1234,8 +1258,16 @@ function updatePlayer(){
     }
   });
 
-  /* ---- bendera finish ---- */
-  if (P.x + P.w > L.flag*TILE && !G.done){
+  /* ---- bendera finish (terkunci selama boss hidup) ---- */
+  var bossAlive = false;
+  for (var b3 = 0; b3 < L.enemies.length; b3++)
+    if (L.enemies[b3].type === 'B' && !L.enemies[b3].dead) bossAlive = true;
+  if (bossAlive && P.x + P.w > (L.flag - 4) * TILE && G.bossHint <= 0){
+    addPop(P.x, P.y - 20, 'DEFEAT THE BEAR PHARAOH!', '#ff6b5e', 20);
+    G.bossHint = 150;
+  }
+  if (G.bossHint > 0) G.bossHint--;
+  if (!bossAlive && P.x + P.w > L.flag*TILE && !G.done){
     G.done = true; G.doneT = 0;
     G.timeBonus = Math.max(0, Math.ceil(G.timeLeft)) * 5;
     G.score += 1000 + G.timeBonus;
@@ -1270,11 +1302,25 @@ function updateEnemies(){
       if (e.x < TILE || e.x > L.pxW - TILE - e.w) e.vx *= -1;
     } else {
       e.vy = (e.vy || 0) + GRAV;
-      if (e.ground){ /* jangan masuk jurang: berbalik di tepi */
+      if (e.type === 'B'){ /* BEAR PHARAOH: rutinitas charge */
+        if (e.flash > 0) e.flash--;
+        if (e.charge > 0){ e.charge--; }
+        else if (e.ground && --e.chargeT <= 0){
+          e.vx = (P.x + P.w/2 > e.x + e.w/2 ? 1 : -1) * 3.1;
+          e.charge = 46; e.chargeT = 175;
+          addPop(e.x + e.w/2, e.y - 14, 'MARKET CRASH!', '#ff6b5e', 18);
+          SFX.hurt();
+        }
+      }
+      if (e.ground && e.type !== 'B'){ /* jangan masuk jurang: berbalik di tepi */
         var dirx = e.vx > 0 ? 1 : -1;
         var fx2 = Math.floor((e.x + (dirx > 0 ? e.w + 3 : -3)) / TILE);
         var by2 = Math.floor((e.y + e.h + 8) / TILE);
         if (!solid(fx2, by2)) e.vx *= -1;
+      }
+      if (e.type === 'B'){ /* boss tetap di arena vault */
+        if (e.x < 158*TILE) { e.x = 158*TILE; e.vx = Math.abs(e.vx); }
+        if (e.x > 173*TILE - e.w) { e.x = 173*TILE - e.w; e.vx = -Math.abs(e.vx); }
       }
       e.x += e.vx;
       var top = Math.floor(e.y / TILE), bot = Math.floor((e.y + e.h - 1) / TILE);
@@ -1305,11 +1351,11 @@ function updateEnemies(){
         }
         return;
       }
-      if (P.powerT > 0){
+      if (P.powerT > 0 && e.type !== 'B'){
         e.dead = true; e.deadT = 0; G.score += 150;
         addPop(e.x + e.w/2, e.y - 8, '+150', '#ffd976', 16);
         SFX.stomp();
-      } else if (P.vy > 1 && P.prevBottom <= e.y + 12 && e.type !== 'b'){
+      } else if (P.vy > 1 && P.prevBottom <= e.y + 12 && e.type !== 'b' && e.type !== 'B'){
         e.dead = true; e.deadT = 0; G.score += 100;
         addPop(e.x + e.w/2, e.y - 8, '+100', '#ffffff', 16);
         P.vy = keys.jump ? -10.5 : -7.5;
@@ -1343,6 +1389,18 @@ function updateShots(){
       if (e.dead || e.gone) continue;
       if (s.x + s.r > e.x && s.x - s.r < e.x + e.w &&
           s.y + s.r > e.y && s.y - s.r < e.y + e.h){
+        if (e.type === 'B'){
+          e.hp--; e.flash = 8; G.score += 100;
+          addPop(e.x + e.w/2, e.y - 10, 'HIT! ' + Math.max(0, e.hp), '#ffd976', 16);
+          SFX.stomp();
+          if (e.hp <= 0){
+            e.dead = true; e.deadT = 0; G.score += 2000;
+            addPop(e.x + e.w/2, e.y - 30, 'BEAR PHARAOH DEFEATED! +2000', '#7dff9a', 20);
+            SFX.power();
+          }
+          G.shots.splice(i, 1);
+          break;
+        }
         e.dead = true; e.deadT = 0; G.score += 100;
         addPop(e.x + e.w/2, e.y - 8, '+100', '#ffffff', 16);
         SFX.stomp();
@@ -1453,6 +1511,7 @@ function panel(x, y, w, h, alpha){
 /* ---------- layout kartu pilih karakter ---------- */
 var CARD_W = 170, CARD_H = 170, CARD_X0 = 195, CARD_Y = [95, 285], CARD_GAP = 30;
 var START_BTN = { x: VW/2 - 110, y: 472, w: 220, h: 48 };
+var LEADER_BTN = { x: 18, y: 58, w: 208, h: 44 };
 function cardRect(i){
   return { x: CARD_X0 + (i % 3) * (CARD_W + CARD_GAP),
            y: CARD_Y[(i / 3) | 0], w: CARD_W, h: CARD_H };
@@ -1480,7 +1539,11 @@ function updateMenus(){
 /* ---------- klik / tap ---------- */
 function canvasClick(x, y){
   var i, r;
-  if (G.screen === 'title'){ G.screen = 'intro'; SFX.blip(); return; }
+  if (G.screen === 'title'){
+    if (x >= LEADER_BTN.x && x <= LEADER_BTN.x + LEADER_BTN.w &&
+        y >= LEADER_BTN.y && y <= LEADER_BTN.y + LEADER_BTN.h){ openBoard(); return; }
+    G.screen = 'intro'; SFX.blip(); return;
+  }
   if (G.screen === 'intro'){
     if (x >= START_BTN.x && x <= START_BTN.x + START_BTN.w &&
         y >= START_BTN.y && y <= START_BTN.y + START_BTN.h){
@@ -1499,6 +1562,12 @@ function canvasClick(x, y){
 /* ============================================================ */
 function renderTitle(){
   drawSky('desert', G.t * 0.6, G.t);
+
+  CTX.fillStyle = 'rgba(224,72,62,.95)';
+  rrect(LEADER_BTN.x, LEADER_BTN.y, LEADER_BTN.w, LEADER_BTN.h, 12); CTX.fill();
+  CTX.strokeStyle = '#ffd976'; CTX.lineWidth = 3;
+  rrect(LEADER_BTN.x, LEADER_BTN.y, LEADER_BTN.w, LEADER_BTN.h, 12); CTX.stroke();
+  outlined('🏆 HALL OF FAME', LEADER_BTN.x + LEADER_BTN.w/2, LEADER_BTN.y + 23, 19, '#ffffff', '#5c130d');
 
   if (artImage && artImage.complete && artImage.width){
     var h = 290, w = h * artImage.width / artImage.height;
@@ -1591,6 +1660,22 @@ function renderHUD(){
 
   if (G.P.powerT > 0){
     txt('xPHAR ' + Math.ceil(G.P.powerT / 60) + 's', VW - 170, 24, 15, '#ffd976', 'right');
+  }
+
+  /* HP bar BEAR PHARAOH */
+  var boss = null;
+  for (var i2 = 0; i2 < G.L.enemies.length; i2++){
+    var e2 = G.L.enemies[i2];
+    if (e2.type === 'B' && !e2.dead) boss = e2;
+  }
+  if (boss){
+    outlined('BEAR PHARAOH', VW/2, 66, 16, '#ff6b5e', '#2a060a');
+    CTX.fillStyle = 'rgba(14,5,9,.8)';
+    rrect(VW/2 - 150, 78, 300, 12, 6); CTX.fill();
+    CTX.fillStyle = '#e84142';
+    if (boss.hp > 0){ rrect(VW/2 - 148, 80, 296 * boss.hp / 6, 8, 4); CTX.fill(); }
+    CTX.strokeStyle = '#ffd976'; CTX.lineWidth = 2;
+    rrect(VW/2 - 150, 78, 300, 12, 6); CTX.stroke();
   }
 }
 

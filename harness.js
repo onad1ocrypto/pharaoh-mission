@@ -142,6 +142,27 @@ check('board fallback lokal berisi array', Array.isArray(run('G.boardData')));
 run("G.screen='board'; __pq.render(); G.screen='title';");
 check('render board tanpa error', true);
 
+/* ---- tuning level ---- */
+check('L2: semua jurang <=3', run('LEVELS[1].pits.every(function(p){return p[1]-p[0]+1<=3;})') === true);
+check('L3: semua jurang <=4', run('LEVELS[2].pits.every(function(p){return p[1]-p[0]+1<=4;})') === true);
+
+/* ---- boss fight ---- */
+run('loadLevel(2); var bo=null; G.L.enemies.forEach(function(e){ if(e.type==="B") bo=e; });');
+check('boss ada di level 3', run('G.L.enemies.some(function(e){return e.type==="B";})') === true);
+check('boss hp 6', run('G.L.enemies.filter(function(e){return e.type==="B";})[0].hp') === 6);
+run('G.P.x = (G.L.flag-2)*TILE; G.P.y = G.L.ground*TILE-64; keys.right = true; for (var i=0;i<40;i++) updatePlay(); keys.right = false;');
+check('flag terkunci selama boss hidup', run('G.done') === false);
+run('var bo2 = G.L.enemies.filter(function(e){return e.type==="B";})[0]; G.P.x = bo2.x - 120; G.P.y = G.L.ground*TILE - 64; G.P.face = 1; G.camX = G.P.x - 300; bo2.chargeT = 99999; bo2.vx = 0; bo2.dir = 0; G.P.invincibleT = 99999; G.P.hp = 3;');
+run('for (var k=0;k<10;k++){ var bb = G.L.enemies.filter(function(e){return e.type==="B";})[0]; if (bb.dead) break; pressed.attack = true; updatePlay(); pressed.attack = false; for (var i=0;i<45;i++) updatePlay(); }');
+check('6 tembakan menumbangkan boss', run('G.L.enemies.filter(function(e){return e.type==="B";})[0].dead') === true);
+run('G.P.x = (G.L.flag-2)*TILE; G.P.y = G.L.ground*TILE-64; G.P.invincibleT = 99999; keys.right = true; for (var i=0;i<60;i++) updatePlay(); keys.right = false;');
+check('flag terbuka setelah boss kalah', run('G.done') === true);
+
+/* ---- tombol leaderboard di title ---- */
+run("G.screen='title'; canvasClick(100, 80);");
+check('tombol HALL OF FAME membuka board', run('G.screen') === 'board');
+run("G.screen='title';");
+
 /* ---- render semua layar (deteksi error runtime di kode gambar) ---- */
 try {
   run('var render = __pq.render;');

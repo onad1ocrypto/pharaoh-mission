@@ -30,7 +30,7 @@ function loadLevel(i){
   G.fx = []; G.bumps = {}; G.shots = [];
   G.done = false; G.doneT = 0; G.timeBonus = 0;
   G.dying = false; G.dieT = 0; G.paused = false;
-  G.bird = { on:false }; G.birdT = 420;
+  G.bird = { on:false }; G.birdT = 420; G.bossHint = 0;
 }
 
 function startGame(){
@@ -285,8 +285,16 @@ function updatePlayer(){
     }
   });
 
-  /* ---- bendera finish ---- */
-  if (P.x + P.w > L.flag*TILE && !G.done){
+  /* ---- bendera finish (terkunci selama boss hidup) ---- */
+  var bossAlive = false;
+  for (var b3 = 0; b3 < L.enemies.length; b3++)
+    if (L.enemies[b3].type === 'B' && !L.enemies[b3].dead) bossAlive = true;
+  if (bossAlive && P.x + P.w > (L.flag - 4) * TILE && G.bossHint <= 0){
+    addPop(P.x, P.y - 20, 'DEFEAT THE BEAR PHARAOH!', '#ff6b5e', 20);
+    G.bossHint = 150;
+  }
+  if (G.bossHint > 0) G.bossHint--;
+  if (!bossAlive && P.x + P.w > L.flag*TILE && !G.done){
     G.done = true; G.doneT = 0;
     G.timeBonus = Math.max(0, Math.ceil(G.timeLeft)) * 5;
     G.score += 1000 + G.timeBonus;
@@ -321,11 +329,25 @@ function updateEnemies(){
       if (e.x < TILE || e.x > L.pxW - TILE - e.w) e.vx *= -1;
     } else {
       e.vy = (e.vy || 0) + GRAV;
-      if (e.ground){ /* jangan masuk jurang: berbalik di tepi */
+      if (e.type === 'B'){ /* BEAR PHARAOH: rutinitas charge */
+        if (e.flash > 0) e.flash--;
+        if (e.charge > 0){ e.charge--; }
+        else if (e.ground && --e.chargeT <= 0){
+          e.vx = (P.x + P.w/2 > e.x + e.w/2 ? 1 : -1) * 3.1;
+          e.charge = 46; e.chargeT = 175;
+          addPop(e.x + e.w/2, e.y - 14, 'MARKET CRASH!', '#ff6b5e', 18);
+          SFX.hurt();
+        }
+      }
+      if (e.ground && e.type !== 'B'){ /* jangan masuk jurang: berbalik di tepi */
         var dirx = e.vx > 0 ? 1 : -1;
         var fx2 = Math.floor((e.x + (dirx > 0 ? e.w + 3 : -3)) / TILE);
         var by2 = Math.floor((e.y + e.h + 8) / TILE);
         if (!solid(fx2, by2)) e.vx *= -1;
+      }
+      if (e.type === 'B'){ /* boss tetap di arena vault */
+        if (e.x < 158*TILE) { e.x = 158*TILE; e.vx = Math.abs(e.vx); }
+        if (e.x > 173*TILE - e.w) { e.x = 173*TILE - e.w; e.vx = -Math.abs(e.vx); }
       }
       e.x += e.vx;
       var top = Math.floor(e.y / TILE), bot = Math.floor((e.y + e.h - 1) / TILE);
@@ -356,11 +378,11 @@ function updateEnemies(){
         }
         return;
       }
-      if (P.powerT > 0){
+      if (P.powerT > 0 && e.type !== 'B'){
         e.dead = true; e.deadT = 0; G.score += 150;
         addPop(e.x + e.w/2, e.y - 8, '+150', '#ffd976', 16);
         SFX.stomp();
-      } else if (P.vy > 1 && P.prevBottom <= e.y + 12 && e.type !== 'b'){
+      } else if (P.vy > 1 && P.prevBottom <= e.y + 12 && e.type !== 'b' && e.type !== 'B'){
         e.dead = true; e.deadT = 0; G.score += 100;
         addPop(e.x + e.w/2, e.y - 8, '+100', '#ffffff', 16);
         P.vy = keys.jump ? -10.5 : -7.5;
@@ -394,6 +416,18 @@ function updateShots(){
       if (e.dead || e.gone) continue;
       if (s.x + s.r > e.x && s.x - s.r < e.x + e.w &&
           s.y + s.r > e.y && s.y - s.r < e.y + e.h){
+        if (e.type === 'B'){
+          e.hp--; e.flash = 8; G.score += 100;
+          addPop(e.x + e.w/2, e.y - 10, 'HIT! ' + Math.max(0, e.hp), '#ffd976', 16);
+          SFX.stomp();
+          if (e.hp <= 0){
+            e.dead = true; e.deadT = 0; G.score += 2000;
+            addPop(e.x + e.w/2, e.y - 30, 'BEAR PHARAOH DEFEATED! +2000', '#7dff9a', 20);
+            SFX.power();
+          }
+          G.shots.splice(i, 1);
+          break;
+        }
         e.dead = true; e.deadT = 0; G.score += 100;
         addPop(e.x + e.w/2, e.y - 8, '+100', '#ffffff', 16);
         SFX.stomp();

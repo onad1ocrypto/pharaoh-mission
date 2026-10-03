@@ -43,6 +43,7 @@ function panel(x, y, w, h, alpha){
 /* ---------- layout kartu pilih karakter ---------- */
 var CARD_W = 170, CARD_H = 170, CARD_X0 = 195, CARD_Y = [95, 285], CARD_GAP = 30;
 var START_BTN = { x: VW/2 - 110, y: 472, w: 220, h: 48 };
+var LEADER_BTN = { x: 18, y: 58, w: 208, h: 44 };
 function cardRect(i){
   return { x: CARD_X0 + (i % 3) * (CARD_W + CARD_GAP),
            y: CARD_Y[(i / 3) | 0], w: CARD_W, h: CARD_H };
@@ -70,7 +71,11 @@ function updateMenus(){
 /* ---------- klik / tap ---------- */
 function canvasClick(x, y){
   var i, r;
-  if (G.screen === 'title'){ G.screen = 'intro'; SFX.blip(); return; }
+  if (G.screen === 'title'){
+    if (x >= LEADER_BTN.x && x <= LEADER_BTN.x + LEADER_BTN.w &&
+        y >= LEADER_BTN.y && y <= LEADER_BTN.y + LEADER_BTN.h){ openBoard(); return; }
+    G.screen = 'intro'; SFX.blip(); return;
+  }
   if (G.screen === 'intro'){
     if (x >= START_BTN.x && x <= START_BTN.x + START_BTN.w &&
         y >= START_BTN.y && y <= START_BTN.y + START_BTN.h){
@@ -89,6 +94,12 @@ function canvasClick(x, y){
 /* ============================================================ */
 function renderTitle(){
   drawSky('desert', G.t * 0.6, G.t);
+
+  CTX.fillStyle = 'rgba(224,72,62,.95)';
+  rrect(LEADER_BTN.x, LEADER_BTN.y, LEADER_BTN.w, LEADER_BTN.h, 12); CTX.fill();
+  CTX.strokeStyle = '#ffd976'; CTX.lineWidth = 3;
+  rrect(LEADER_BTN.x, LEADER_BTN.y, LEADER_BTN.w, LEADER_BTN.h, 12); CTX.stroke();
+  outlined('🏆 HALL OF FAME', LEADER_BTN.x + LEADER_BTN.w/2, LEADER_BTN.y + 23, 19, '#ffffff', '#5c130d');
 
   if (artImage && artImage.complete && artImage.width){
     var h = 290, w = h * artImage.width / artImage.height;
@@ -181,6 +192,22 @@ function renderHUD(){
 
   if (G.P.powerT > 0){
     txt('xPHAR ' + Math.ceil(G.P.powerT / 60) + 's', VW - 170, 24, 15, '#ffd976', 'right');
+  }
+
+  /* HP bar BEAR PHARAOH */
+  var boss = null;
+  for (var i2 = 0; i2 < G.L.enemies.length; i2++){
+    var e2 = G.L.enemies[i2];
+    if (e2.type === 'B' && !e2.dead) boss = e2;
+  }
+  if (boss){
+    outlined('BEAR PHARAOH', VW/2, 66, 16, '#ff6b5e', '#2a060a');
+    CTX.fillStyle = 'rgba(14,5,9,.8)';
+    rrect(VW/2 - 150, 78, 300, 12, 6); CTX.fill();
+    CTX.fillStyle = '#e84142';
+    if (boss.hp > 0){ rrect(VW/2 - 148, 80, 296 * boss.hp / 6, 8, 4); CTX.fill(); }
+    CTX.strokeStyle = '#ffd976'; CTX.lineWidth = 2;
+    rrect(VW/2 - 150, 78, 300, 12, 6); CTX.stroke();
   }
 }
 

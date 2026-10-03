@@ -401,7 +401,7 @@ function drawBird(){
 }
 
 function drawEnemy(e){
-  var img = enemyImgs[e.type];
+  var img = enemyImgs[e.type === 'B' ? 'b' : e.type];
   if (!img || !img.width) return;
   CTX.save();
   var cx = e.x + e.w / 2;
@@ -413,9 +413,31 @@ function drawEnemy(e){
   }
   CTX.translate(cx, e.y + e.h);
   CTX.scale(e.vx < 0 ? -1 : 1, 1);
-  var h = e.h * (e.type === 's' ? 1.3 : 1.15);
+  var h = e.type === 's' ? e.h * 1.3 : (e.type === 'B' ? e.h * 1.06 : e.h * 1.15);
   var w = h * img.width / img.height;
+  if (e.type === 'B' && e.charge > 0){
+    CTX.shadowColor = 'rgba(232,65,66,.9)'; CTX.shadowBlur = 26;
+  }
   CTX.drawImage(img, -w / 2, -h, w, h);
+  CTX.shadowBlur = 0;
+  if (e.type === 'B'){
+    /* mahkota nemes firaun di kepala bear */
+    var hx = w * 0.14, hy = -h + 4, cw = 46, chh = 26;
+    CTX.fillStyle = '#f5c542';
+    CTX.beginPath();
+    CTX.moveTo(hx - cw/2, hy + chh);
+    CTX.lineTo(hx - cw*0.30, hy);
+    CTX.lineTo(hx + cw*0.30, hy);
+    CTX.lineTo(hx + cw/2, hy + chh);
+    CTX.closePath(); CTX.fill();
+    CTX.fillStyle = '#e84142';
+    for (var st2 = -2; st2 <= 2; st2++) CTX.fillRect(hx + st2*8 - 2, hy + 3, 4, chh - 6);
+    if (e.flash > 0){
+      CTX.globalAlpha = 0.55;
+      CTX.fillStyle = '#ffffff';
+      CTX.beginPath(); CTX.ellipse(0, -h/2, w*0.55, h*0.55, 0, 0, 7); CTX.fill();
+    }
+  }
   CTX.restore();
 }
 
