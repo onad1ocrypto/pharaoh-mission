@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="description" content="PHARAOH QUEST - an Egyptian platformer adventure built for the Pharaoh Exchange Anniversary Competition 3">
+<title>PHARAOH QUEST — Pharaoh on AVAX</title>
+<style>
+  @font-face{font-family:'PharaohDisplay';src:url(data:font/woff2;base64,__FONT_B64__) format('woff2');font-display:swap;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%;background:#0b0714;overflow:hidden;
+    font-family:"Trebuchet MS",Verdana,Geneva,sans-serif;color:#f6e7c8}
+  body{background:radial-gradient(circle at 50% 20%,#241436 0%,#0b0714 70%)}
+  #wrap{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  canvas{display:block;background:#120a20;border-radius:8px;touch-action:none;
+    box-shadow:0 0 0 2px rgba(245,197,66,.35),0 0 40px rgba(245,197,66,.10),0 24px 70px rgba(0,0,0,.7)}
+  #touch{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;
+    padding:10px 16px calc(14px + env(safe-area-inset-bottom));pointer-events:none;z-index:5}
+  #touch .pad{display:flex;gap:14px;pointer-events:auto}
+  .btn{width:78px;height:78px;border-radius:50%;background:rgba(245,197,66,.14);
+    border:2px solid rgba(245,197,66,.5);color:#f5c542;font-size:30px;font-weight:bold;
+    display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+  .btn.press{background:rgba(245,197,66,.42);transform:scale(.94)}
+  #hint{position:fixed;left:0;right:0;bottom:4px;text-align:center;font-size:11px;opacity:.4;letter-spacing:.3px}
+  @media (max-width:760px){#hint{display:none}}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="960" height="560"></canvas></div>
+<div id="touch">
+  <div class="pad">
+    <div class="btn" data-k="left">◀</div>
+    <div class="btn" data-k="right">▶</div>
+  </div>
+  <div class="pad">
+    <div class="btn" data-k="defend">🛡</div>
+    <div class="btn" data-k="attack">⚡</div>
+    <div class="btn" data-k="jump">▲</div>
+  </div>
+</div>
+<div id="hint">&larr; &rarr; / A D = move &nbsp;·&nbsp; SPACE = jump &nbsp;·&nbsp; J / X = attack &nbsp;·&nbsp; K / C = defend &nbsp;·&nbsp; P = pause &nbsp;·&nbsp; M = music &nbsp;·&nbsp; R = retry</div>
+<script>

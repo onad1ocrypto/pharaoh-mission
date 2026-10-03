@@ -1,0 +1,5 @@
+uploads/
+build/
+__pycache__/
+*.pyc
+.arena/
