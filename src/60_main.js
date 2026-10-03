@@ -7,6 +7,10 @@
   function step(){
     if (G.screen === 'play') updatePlay();
     else { G.t++; updateMenus(); }
+    if ((G.screen === 'over' || G.screen === 'complete') && !G.submitted){
+      G.submitted = true;
+      NET.submit(G.score);
+    }
   }
 
   function render(){

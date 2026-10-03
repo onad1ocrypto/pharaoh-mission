@@ -22,11 +22,34 @@
     display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
   .btn.press{background:rgba(245,197,66,.42);transform:scale(.94)}
   #hint{position:fixed;left:0;right:0;bottom:4px;text-align:center;font-size:11px;opacity:.4;letter-spacing:.3px}
+  #namebox{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(8,3,14,.85);z-index:9}
+  .nb-card{background:#1c0f26;border:3px solid #f5c542;border-radius:16px;padding:26px 34px;
+    text-align:center;box-shadow:0 0 60px rgba(232,65,66,.35)}
+  .nb-title{font-family:'PharaohDisplay',serif;font-size:30px;color:#ffd976;letter-spacing:2px}
+  .nb-sub{font-size:13px;color:#f6e7c8;margin:8px 0 16px;opacity:.85}
+  #nb-input{display:block;width:270px;margin:0 auto 14px;padding:10px 14px;font-size:18px;
+    text-align:center;letter-spacing:2px;text-transform:uppercase;color:#ffd976;
+    background:#0d0612;border:2px solid #e84142;border-radius:10px;outline:none}
+  #nb-input:focus{border-color:#ffd976}
+  #nb-btn{font-family:'PharaohDisplay',serif;font-size:17px;color:#fff;background:#e84142;
+    border:2px solid #ffd976;border-radius:10px;padding:10px 26px;cursor:pointer}
+  #nb-btn:hover{background:#ff6b5e}
+  #nb-err{height:18px;margin-top:8px;font-size:12px;color:#ff6b5e}
   @media (max-width:760px){#hint{display:none}}
 </style>
 </head>
 <body>
 <div id="wrap"><canvas id="game" width="960" height="560"></canvas></div>
+<div id="namebox" style="display:none">
+  <div class="nb-card">
+    <div class="nb-title">ENTER YOUR NAME</div>
+    <div class="nb-sub">Your permanent tag on the global leaderboard</div>
+    <input id="nb-input" maxlength="16" placeholder="YOUR NAME" autocomplete="off" spellcheck="false">
+    <button id="nb-btn">START QUEST ▶</button>
+    <div id="nb-err"></div>
+  </div>
+</div>
 <div id="touch">
   <div class="pad">
     <div class="btn" data-k="left">◀</div>
@@ -96,6 +119,7 @@ window.addEventListener('keydown', function(e){
     case 'KeyM': pressed.m = true; break;
     case 'KeyR': pressed.r = true; break;
     case 'KeyC': pressed.c = true; break;
+    case 'KeyL': pressed.l = true; break;
   }
 });
 window.addEventListener('keyup', function(e){
@@ -122,6 +146,65 @@ CV.addEventListener('pointerdown', function(e){
   var r = CV.getBoundingClientRect();
   canvasClick((e.clientX - r.left) * VW / r.width, (e.clientY - r.top) * VH / r.height);
 });
+
+/* ---------- leaderboard: username permanen + kirim skor ---------- */
+var NET = {
+  user: (function(){ try { return localStorage.getItem('pq_user') || ''; } catch(e){ return ''; } })(),
+  setName: function(n){
+    n = (n || '').replace(/[^\w ]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+    if (n.length < 3) return false;
+    this.user = n;
+    try { localStorage.setItem('pq_user', n); } catch(e){}
+    return true;
+  },
+  localGet: function(){ try { return JSON.parse(localStorage.getItem('pq_board') || '[]'); } catch(e){ return []; } },
+  localSubmit: function(s){
+    var b = this.localGet(), me = null, i;
+    for (i = 0; i < b.length; i++) if (b[i].u === this.user) me = b[i];
+    if (me) me.s = Math.max(me.s, s); else b.push({ u:this.user, s:s });
+    b.sort(function(a, c){ return c.s - a.s; });
+    try { localStorage.setItem('pq_board', JSON.stringify(b.slice(0, 50))); } catch(e){}
+  },
+  submit: function(s){
+    if (!this.user || s <= 0) return;
+    this.localSubmit(s);
+    try {
+      fetch('/api/leaderboard', { method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ u:this.user, s:s }) }).catch(function(){});
+    } catch(e){}
+  },
+  board: function(cb){
+    var self = this;
+    var fallback = function(){ cb(self.localGet().slice(0, 10), false); };
+    try {
+      fetch('/api/leaderboard').then(function(r){
+        if (!r.ok) throw 0;
+        return r.json();
+      }).then(function(j){ cb(j.top || [], true); }).catch(fallback);
+    } catch(e){ fallback(); }
+  }
+};
+
+/* kotak username (DOM, muncul sekali) */
+(function(){
+  var box = document.getElementById('namebox');
+  var inp = document.getElementById('nb-input');
+  var err = document.getElementById('nb-err');
+  function commit(){
+    if (NET.setName(inp.value)){ box.style.display = 'none'; SFX.unlock(); SFX.blip(); }
+    else err.textContent = '3-16 letters / numbers only';
+  }
+  if (NET.user){ box.style.display = 'none'; }
+  else {
+    box.style.display = 'flex';
+    document.getElementById('nb-btn').addEventListener('click', commit);
+    inp.addEventListener('keydown', function(e){
+      e.stopPropagation();
+      if (e.key === 'Enter') commit();
+    });
+    setTimeout(function(){ inp.focus(); }, 300);
+  }
+})();
 
 /* ---------- audio (semua di-sintesis, tanpa file luar) ---------- */
 var SFX = {
@@ -900,7 +983,7 @@ function loadLevel(i){
 }
 
 function startGame(){
-  G.score = 0; G.coins = 0; G.lives = 3;
+  G.score = 0; G.coins = 0; G.lives = 3; G.submitted = false;
   loadLevel(0);
   G.screen = 'play';
   SFX.unlock(); SFX.setMusic(SFX.musicOn);
@@ -1378,7 +1461,10 @@ function cardRect(i){
 /* ---------- update layar menu ---------- */
 function updateMenus(){
   if (G.screen === 'title'){
+    if (pressed.l){ openBoard(); clearPressed(); return; }
     if (pressed.enter || pressed.jump){ G.screen = 'intro'; SFX.blip(); clearPressed(); return; }
+  } else if (G.screen === 'board'){
+    if (pressed.enter || pressed.esc || pressed.jump){ G.screen = 'title'; SFX.blip(); }
   } else if (G.screen === 'intro'){
     if (pressed.enter || pressed.jump){ startGame(); }
     if (pressed.esc){ G.screen = 'title'; }
@@ -1404,6 +1490,7 @@ function canvasClick(x, y){
     }
     return;
   }
+  if (G.screen === 'board'){ G.screen = 'title'; return; }
   if (G.screen === 'over'){ startGame(); return; }
   if (G.screen === 'complete'){ G.screen = 'title'; return; }
   if (G.screen === 'play' && G.paused){ G.paused = false; }
@@ -1432,11 +1519,12 @@ function renderTitle(){
   CTX.fillRect(0, 476, VW, VH - 476);
   CTX.fillStyle = 'rgba(245,197,66,.55)';
   CTX.fillRect(0, 476, VW, 2);
+  shadowTxt('PLAYER: ' + (NET.user || '—'), VW/2, 494, 15, '#ff9d97');
   shadowTxt(IS_TOUCH ? 'On-screen: ◀ ▶ move · ▲ jump · ⚡ shoot · 🛡 block'
-               : '← → / A D move · SPACE jump · J shoot · K block · P pause', VW/2, 494, 15, '#ffe9b0');
-  shadowTxt('BEST SCORE: ' + G.best, VW/2, 515, 15, '#ffd976');
-  shadowTxt('Made to celebrate the 1-Year Anniversary of Pharaoh on AVAX', VW/2, 536, 14, '#ffd976');
-  shadowTxt('BY : SASAM', VW/2, 553, 14, '#ff6b5e');
+               : '← → / A D move · SPACE jump · J shoot · K block · L = leaderboard', VW/2, 514, 14, '#ffe9b0');
+  shadowTxt('BEST SCORE: ' + G.best, VW/2, 533, 14, '#ffd976');
+  shadowTxt('Made to celebrate the 1-Year Anniversary of Pharaoh on AVAX', VW/2, 548, 12.5, '#ffd976');
+  shadowTxt('BY : SASAM', VW/2, 560 - 6, 12.5, '#ff6b5e');
 }
 
 var SCENES = [
@@ -1598,6 +1686,42 @@ function renderPlayOverlays(){
   }
 }
 
+/* ---------- leaderboard ---------- */
+function openBoard(){
+  G.screen = 'board';
+  G.boardLoading = true; G.boardData = null;
+  NET.board(function(top, online){
+    G.boardData = top; G.boardOnline = online; G.boardLoading = false;
+  });
+}
+function renderBoard(){
+  drawSky('ruins', G.t * 0.4, G.t);
+  CTX.fillStyle = 'rgba(10,5,20,.7)'; CTX.fillRect(0, 0, VW, VH);
+  outlined('HALL OF FAME', VW/2, 52, 40, '#ffd976', '#a01820');
+  panel(VW/2 - 300, 84, 600, 400);
+  if (G.boardLoading){
+    outlined('CONNECTING…', VW/2, 280, 24, '#ffe9b0');
+  } else {
+    var top = G.boardData || [];
+    shadowTxt(G.boardOnline ? '★ GLOBAL LEADERBOARD — PHARAOH ON AVAX ★'
+                            : 'LOCAL LEADERBOARD (server offline)', VW/2, 108, 14,
+              G.boardOnline ? '#ff6b5e' : '#ffe9b0');
+    if (!top.length){
+      shadowTxt('No scores yet — be the first legend!', VW/2, 280, 18, '#fff6e0');
+    }
+    for (var i = 0; i < Math.min(10, top.length); i++){
+      var y = 140 + i * 32, me = top[i].u === NET.user;
+      if (me){ CTX.fillStyle = 'rgba(245,197,66,.16)'; CTX.fillRect(VW/2 - 280, y - 14, 560, 28); }
+      var medal = i === 0 ? '#ffd976' : i === 1 ? '#d8d8d8' : i === 2 ? '#d9a05b' : '#f6e7c8';
+      txt(String(i + 1).padStart(2, ' '), VW/2 - 260, y, 17, medal, 'left');
+      txt(top[i].u, VW/2 - 210, y, 17, me ? '#ffd976' : '#f6e7c8', 'left');
+      txt(String(top[i].s).padStart(6, '0'), VW/2 + 260, y, 17, medal, 'right');
+    }
+    shadowTxt('You play as: ' + (NET.user || '—'), VW/2, 462, 14, '#ff9d97');
+  }
+  if (G.t % 70 < 45) shadowTxt('ENTER / ESC = BACK', VW/2, 508, 16, '#fff6e0');
+}
+
 /* ---------- game over & tamat ---------- */
 function renderOver(){
   drawSky('ruins', 0, G.t);
@@ -1636,6 +1760,10 @@ function renderComplete(){
   function step(){
     if (G.screen === 'play') updatePlay();
     else { G.t++; updateMenus(); }
+    if ((G.screen === 'over' || G.screen === 'complete') && !G.submitted){
+      G.submitted = true;
+      NET.submit(G.score);
+    }
   }
 
   function render(){

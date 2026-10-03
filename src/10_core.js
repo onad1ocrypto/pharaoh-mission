@@ -54,6 +54,7 @@ window.addEventListener('keydown', function(e){
     case 'KeyM': pressed.m = true; break;
     case 'KeyR': pressed.r = true; break;
     case 'KeyC': pressed.c = true; break;
+    case 'KeyL': pressed.l = true; break;
   }
 });
 window.addEventListener('keyup', function(e){
@@ -80,6 +81,65 @@ CV.addEventListener('pointerdown', function(e){
   var r = CV.getBoundingClientRect();
   canvasClick((e.clientX - r.left) * VW / r.width, (e.clientY - r.top) * VH / r.height);
 });
+
+/* ---------- leaderboard: username permanen + kirim skor ---------- */
+var NET = {
+  user: (function(){ try { return localStorage.getItem('pq_user') || ''; } catch(e){ return ''; } })(),
+  setName: function(n){
+    n = (n || '').replace(/[^\w ]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+    if (n.length < 3) return false;
+    this.user = n;
+    try { localStorage.setItem('pq_user', n); } catch(e){}
+    return true;
+  },
+  localGet: function(){ try { return JSON.parse(localStorage.getItem('pq_board') || '[]'); } catch(e){ return []; } },
+  localSubmit: function(s){
+    var b = this.localGet(), me = null, i;
+    for (i = 0; i < b.length; i++) if (b[i].u === this.user) me = b[i];
+    if (me) me.s = Math.max(me.s, s); else b.push({ u:this.user, s:s });
+    b.sort(function(a, c){ return c.s - a.s; });
+    try { localStorage.setItem('pq_board', JSON.stringify(b.slice(0, 50))); } catch(e){}
+  },
+  submit: function(s){
+    if (!this.user || s <= 0) return;
+    this.localSubmit(s);
+    try {
+      fetch('/api/leaderboard', { method:'POST', headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ u:this.user, s:s }) }).catch(function(){});
+    } catch(e){}
+  },
+  board: function(cb){
+    var self = this;
+    var fallback = function(){ cb(self.localGet().slice(0, 10), false); };
+    try {
+      fetch('/api/leaderboard').then(function(r){
+        if (!r.ok) throw 0;
+        return r.json();
+      }).then(function(j){ cb(j.top || [], true); }).catch(fallback);
+    } catch(e){ fallback(); }
+  }
+};
+
+/* kotak username (DOM, muncul sekali) */
+(function(){
+  var box = document.getElementById('namebox');
+  var inp = document.getElementById('nb-input');
+  var err = document.getElementById('nb-err');
+  function commit(){
+    if (NET.setName(inp.value)){ box.style.display = 'none'; SFX.unlock(); SFX.blip(); }
+    else err.textContent = '3-16 letters / numbers only';
+  }
+  if (NET.user){ box.style.display = 'none'; }
+  else {
+    box.style.display = 'flex';
+    document.getElementById('nb-btn').addEventListener('click', commit);
+    inp.addEventListener('keydown', function(e){
+      e.stopPropagation();
+      if (e.key === 'Enter') commit();
+    });
+    setTimeout(function(){ inp.focus(); }, 300);
+  }
+})();
 
 /* ---------- audio (semua di-sintesis, tanpa file luar) ---------- */
 var SFX = {

@@ -20,7 +20,7 @@ const canvasEl = {
   addEventListener(){},
   getBoundingClientRect:()=>({ left:0, top:0, width:960, height:560 }),
 };
-const elStub = { style:{}, classList:{ add(){}, remove(){} }, getAttribute:()=>'left', addEventListener(){} };
+const elStub = { style:{}, classList:{ add(){}, remove(){} }, getAttribute:()=>'left', addEventListener(){}, focus(){} };
 
 const listeners = {};
 const sandbox = {
@@ -33,7 +33,7 @@ const sandbox = {
     getElementById:(id)=> id === 'game' ? canvasEl : elStub,
     querySelectorAll:()=>[],
   },
-  setInterval:()=>0, clearInterval(){},
+  setInterval:()=>0, clearInterval(){}, setTimeout:(f)=>0, clearTimeout(){},
 };
 sandbox.window = sandbox;
 sandbox.window.addEventListener = (t,f)=>{ (listeners[t] = listeners[t] || []).push(f); };
@@ -135,6 +135,12 @@ run('for (var i=0;i<70;i++) updatePlay();');
 /* ---- musuh berbalik di tepi jurang ---- */
 run('loadLevel(0); var es = G.L.enemies[1]; es.x = 28*TILE; es.vx = 1.2; es.vy = 0; for (var i=0;i<300;i++) updatePlay();');
 check('musuh tidak jatuh ke jurang', run('G.L.enemies[1].gone') !== true && run('G.L.enemies[1].y') <= 440);
+
+/* ---- leaderboard (fallback lokal di node) ---- */
+run('openBoard();');
+check('board fallback lokal berisi array', Array.isArray(run('G.boardData')));
+run("G.screen='board'; __pq.render(); G.screen='title';");
+check('render board tanpa error', true);
 
 /* ---- render semua layar (deteksi error runtime di kode gambar) ---- */
 try {

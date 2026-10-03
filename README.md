@@ -42,6 +42,22 @@ the **BEAR MARKET cannot be stomped** — shoot it or block it.
 - Embedded *Cinzel Decorative* title font; score / best-score persistence
 - Fully English UI
 
+## 🏆 Global Leaderboard
+
+- First launch asks for a **permanent username** (stored on the device).
+- Best scores are submitted to **`/api/leaderboard`** (Vercel serverless) and ranked in
+  **Upstash Redis** (top-10, best score per user). Press **L** on the title screen.
+- If the backend is not configured or you play offline, a **local** leaderboard is used.
+
+### One-time setup (2 minutes)
+
+1. Create a free Redis database at [upstash.com](https://upstash.com) → copy the
+   **REST URL** and **REST TOKEN**.
+2. In your Vercel project: *Settings → Environment Variables*, add:
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+3. Redeploy. Done — every player worldwide now shares one leaderboard.
+
 ## 🛠 Build from source
 
 ```bash

@@ -51,7 +51,10 @@ function cardRect(i){
 /* ---------- update layar menu ---------- */
 function updateMenus(){
   if (G.screen === 'title'){
+    if (pressed.l){ openBoard(); clearPressed(); return; }
     if (pressed.enter || pressed.jump){ G.screen = 'intro'; SFX.blip(); clearPressed(); return; }
+  } else if (G.screen === 'board'){
+    if (pressed.enter || pressed.esc || pressed.jump){ G.screen = 'title'; SFX.blip(); }
   } else if (G.screen === 'intro'){
     if (pressed.enter || pressed.jump){ startGame(); }
     if (pressed.esc){ G.screen = 'title'; }
@@ -77,6 +80,7 @@ function canvasClick(x, y){
     }
     return;
   }
+  if (G.screen === 'board'){ G.screen = 'title'; return; }
   if (G.screen === 'over'){ startGame(); return; }
   if (G.screen === 'complete'){ G.screen = 'title'; return; }
   if (G.screen === 'play' && G.paused){ G.paused = false; }
@@ -105,11 +109,12 @@ function renderTitle(){
   CTX.fillRect(0, 476, VW, VH - 476);
   CTX.fillStyle = 'rgba(245,197,66,.55)';
   CTX.fillRect(0, 476, VW, 2);
+  shadowTxt('PLAYER: ' + (NET.user || '—'), VW/2, 494, 15, '#ff9d97');
   shadowTxt(IS_TOUCH ? 'On-screen: ◀ ▶ move · ▲ jump · ⚡ shoot · 🛡 block'
-               : '← → / A D move · SPACE jump · J shoot · K block · P pause', VW/2, 494, 15, '#ffe9b0');
-  shadowTxt('BEST SCORE: ' + G.best, VW/2, 515, 15, '#ffd976');
-  shadowTxt('Made to celebrate the 1-Year Anniversary of Pharaoh on AVAX', VW/2, 536, 14, '#ffd976');
-  shadowTxt('BY : SASAM', VW/2, 553, 14, '#ff6b5e');
+               : '← → / A D move · SPACE jump · J shoot · K block · L = leaderboard', VW/2, 514, 14, '#ffe9b0');
+  shadowTxt('BEST SCORE: ' + G.best, VW/2, 533, 14, '#ffd976');
+  shadowTxt('Made to celebrate the 1-Year Anniversary of Pharaoh on AVAX', VW/2, 548, 12.5, '#ffd976');
+  shadowTxt('BY : SASAM', VW/2, 560 - 6, 12.5, '#ff6b5e');
 }
 
 var SCENES = [
@@ -269,6 +274,42 @@ function renderPlayOverlays(){
     outlined('PAUSED', VW/2, 220, 46, '#ffd976');
     shadowTxt('P = resume · M = music · R = restart level', VW/2, 268, 17, '#fff6e0');
   }
+}
+
+/* ---------- leaderboard ---------- */
+function openBoard(){
+  G.screen = 'board';
+  G.boardLoading = true; G.boardData = null;
+  NET.board(function(top, online){
+    G.boardData = top; G.boardOnline = online; G.boardLoading = false;
+  });
+}
+function renderBoard(){
+  drawSky('ruins', G.t * 0.4, G.t);
+  CTX.fillStyle = 'rgba(10,5,20,.7)'; CTX.fillRect(0, 0, VW, VH);
+  outlined('HALL OF FAME', VW/2, 52, 40, '#ffd976', '#a01820');
+  panel(VW/2 - 300, 84, 600, 400);
+  if (G.boardLoading){
+    outlined('CONNECTING…', VW/2, 280, 24, '#ffe9b0');
+  } else {
+    var top = G.boardData || [];
+    shadowTxt(G.boardOnline ? '★ GLOBAL LEADERBOARD — PHARAOH ON AVAX ★'
+                            : 'LOCAL LEADERBOARD (server offline)', VW/2, 108, 14,
+              G.boardOnline ? '#ff6b5e' : '#ffe9b0');
+    if (!top.length){
+      shadowTxt('No scores yet — be the first legend!', VW/2, 280, 18, '#fff6e0');
+    }
+    for (var i = 0; i < Math.min(10, top.length); i++){
+      var y = 140 + i * 32, me = top[i].u === NET.user;
+      if (me){ CTX.fillStyle = 'rgba(245,197,66,.16)'; CTX.fillRect(VW/2 - 280, y - 14, 560, 28); }
+      var medal = i === 0 ? '#ffd976' : i === 1 ? '#d8d8d8' : i === 2 ? '#d9a05b' : '#f6e7c8';
+      txt(String(i + 1).padStart(2, ' '), VW/2 - 260, y, 17, medal, 'left');
+      txt(top[i].u, VW/2 - 210, y, 17, me ? '#ffd976' : '#f6e7c8', 'left');
+      txt(String(top[i].s).padStart(6, '0'), VW/2 + 260, y, 17, medal, 'right');
+    }
+    shadowTxt('You play as: ' + (NET.user || '—'), VW/2, 462, 14, '#ff9d97');
+  }
+  if (G.t % 70 < 45) shadowTxt('ENTER / ESC = BACK', VW/2, 508, 16, '#fff6e0');
 }
 
 /* ---------- game over & tamat ---------- */

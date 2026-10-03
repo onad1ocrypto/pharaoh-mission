@@ -22,11 +22,34 @@
     display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
   .btn.press{background:rgba(245,197,66,.42);transform:scale(.94)}
   #hint{position:fixed;left:0;right:0;bottom:4px;text-align:center;font-size:11px;opacity:.4;letter-spacing:.3px}
+  #namebox{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(8,3,14,.85);z-index:9}
+  .nb-card{background:#1c0f26;border:3px solid #f5c542;border-radius:16px;padding:26px 34px;
+    text-align:center;box-shadow:0 0 60px rgba(232,65,66,.35)}
+  .nb-title{font-family:'PharaohDisplay',serif;font-size:30px;color:#ffd976;letter-spacing:2px}
+  .nb-sub{font-size:13px;color:#f6e7c8;margin:8px 0 16px;opacity:.85}
+  #nb-input{display:block;width:270px;margin:0 auto 14px;padding:10px 14px;font-size:18px;
+    text-align:center;letter-spacing:2px;text-transform:uppercase;color:#ffd976;
+    background:#0d0612;border:2px solid #e84142;border-radius:10px;outline:none}
+  #nb-input:focus{border-color:#ffd976}
+  #nb-btn{font-family:'PharaohDisplay',serif;font-size:17px;color:#fff;background:#e84142;
+    border:2px solid #ffd976;border-radius:10px;padding:10px 26px;cursor:pointer}
+  #nb-btn:hover{background:#ff6b5e}
+  #nb-err{height:18px;margin-top:8px;font-size:12px;color:#ff6b5e}
   @media (max-width:760px){#hint{display:none}}
 </style>
 </head>
 <body>
 <div id="wrap"><canvas id="game" width="960" height="560"></canvas></div>
+<div id="namebox" style="display:none">
+  <div class="nb-card">
+    <div class="nb-title">ENTER YOUR NAME</div>
+    <div class="nb-sub">Your permanent tag on the global leaderboard</div>
+    <input id="nb-input" maxlength="16" placeholder="YOUR NAME" autocomplete="off" spellcheck="false">
+    <button id="nb-btn">START QUEST ▶</button>
+    <div id="nb-err"></div>
+  </div>
+</div>
 <div id="touch">
   <div class="pad">
     <div class="btn" data-k="left">◀</div>

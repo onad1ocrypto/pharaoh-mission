@@ -34,7 +34,7 @@ function loadLevel(i){
 }
 
 function startGame(){
-  G.score = 0; G.coins = 0; G.lives = 3;
+  G.score = 0; G.coins = 0; G.lives = 3; G.submitted = false;
   loadLevel(0);
   G.screen = 'play';
   SFX.unlock(); SFX.setMusic(SFX.musicOn);
