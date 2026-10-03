@@ -165,6 +165,7 @@ run("G.screen='title';");
 
 /* ---- piramida finish & alur pulang ke home ---- */
 check('aset piramida finish termuat (data URI png)', run('typeof pyramidImage !== "undefined" && !!pyramidImage && String(pyramidImage.src).indexOf("data:image/png") === 0'));
+check('kain burung bertuliskan PHAR.GG (bukan pharaoh.gg)', String(run('String(drawBird)')).indexOf('PHAR.GG') >= 0 && String(run('String(drawBird)')).indexOf('PHARAOH.GG') < 0);
 run('loadLevel(0); G.done = true; G.doneT = 0; G.enterT = 0; G.P.x = G.L.flag*TILE + 90 - 34; G.P.y = G.L.ground*TILE - 64;');
 run('for (var i=0;i<30;i++) updatePlay();');
 check('pemain menyusut masuk piramida (enterT naik)', run('G.enterT') > 0);

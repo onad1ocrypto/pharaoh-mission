@@ -404,7 +404,7 @@ function drawBird(){
   CTX.fillStyle = '#ffd976';
   CTX.font = 'bold 13px "Trebuchet MS",Verdana,sans-serif';
   CTX.textAlign = 'center'; CTX.textBaseline = 'middle';
-  CTX.fillText('PHARAOH.GG', -sd * 53, 16 + wv * 0.5);
+  CTX.fillText('PHAR.GG', -sd * 53, 16 + wv * 0.5);
   CTX.strokeStyle = '#d9b48a'; CTX.lineWidth = 1.5;
   CTX.beginPath();
   CTX.moveTo(0, -2); CTX.lineTo(-sd * 10, 3);
